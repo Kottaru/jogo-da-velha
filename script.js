@@ -44,11 +44,18 @@ function handlePlayerClick(e) {
 
 function botMove() {
   if (!gameActive) return;
-  // Escolhe uma posição aleatória vazia
-  const emptyIndices = gameState.map((v, i) => v === "" ? i : null).filter(i => i !== null);
-  if (emptyIndices.length === 0) return;
-  const choice = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-  gameState[choice] = "O";
+
+  // 1. Se o bot pode vencer, faz isso
+  let move = findBestMove("O");
+  // 2. Se o jogador pode vencer na próxima, bloqueia
+  if (move === null) move = findBestMove("X");
+  // 3. Senão, escolhe aleatório
+  if (move === null) {
+    const emptyIndices = gameState.map((v, i) => v === "" ? i : null).filter(i => i !== null);
+    move = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+  }
+
+  gameState[move] = "O";
   updateBoard();
 
   if (checkWin("O")) {
@@ -63,6 +70,23 @@ function botMove() {
   }
 
   statusText.textContent = "Sua vez (X)";
+}
+
+function findBestMove(player) {
+  const winPatterns = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+  for (const pattern of winPatterns) {
+    const [a,b,c] = pattern;
+    const values = [gameState[a], gameState[b], gameState[c]];
+    // Se duas casas são do player e a terceira está vazia → jogada vencedora/bloqueio
+    if (values.filter(v => v === player).length === 2 && values.includes("")) {
+      return pattern[values.indexOf("")];
+    }
+  }
+  return null;
 }
 
 function updateBoard() {
