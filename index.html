@@ -2,13 +2,18 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Jogo da Velha vs Bot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo da Velha</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <h1>Jogo da Velha</h1>
-  <div id="board"></div>
-  <p id="status">Sua vez (X)</p>
+  <div id="board">
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+  </div>
+  <p id="status">Vez do jogador X</p>
   <button id="reset">Reiniciar</button>
 
   <script src="script.js"></script>
