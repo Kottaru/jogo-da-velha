@@ -2,9 +2,8 @@ const board = document.getElementById("board");
 const statusText = document.getElementById("status");
 const resetBtn = document.getElementById("reset");
 
-let currentPlayer = "X";
-let gameActive = true;
 let gameState = ["", "", "", "", "", "", "", "", ""];
+let gameActive = true;
 
 function createBoard() {
   board.innerHTML = "";
@@ -14,37 +13,67 @@ function createBoard() {
     div.dataset.index = index;
     div.textContent = cell;
     if (cell) div.classList.add(cell);
-    div.addEventListener("click", handleCellClick);
+    div.addEventListener("click", handlePlayerClick);
     board.appendChild(div);
   });
 }
 
-function handleCellClick(e) {
+function handlePlayerClick(e) {
   const index = e.target.dataset.index;
-  if (gameState[index] !== "" || !gameActive) return;
+  if (!gameActive || gameState[index] !== "") return;
 
-  gameState[index] = currentPlayer;
-  e.target.textContent = currentPlayer;
-  e.target.classList.add(currentPlayer);
+  // Jogador (X)
+  gameState[index] = "X";
+  updateBoard();
 
-  if (checkWin()) {
-    statusText.textContent = `Jogador ${currentPlayer} venceu! 🎉`;
-    highlightWin();
+  if (checkWin("X")) {
+    statusText.textContent = "Você venceu! 🎉";
+    gameActive = false;
+    return;
+  }
+  if (isDraw()) {
+    statusText.textContent = "Empate 🤝";
     gameActive = false;
     return;
   }
 
-  if (!gameState.includes("")) {
-    statusText.textContent = "Empate! 🤝";
-    gameActive = false;
-    return;
-  }
-
-  currentPlayer = currentPlayer === "X" ? "O" : "X";
-  statusText.textContent = `Vez do jogador ${currentPlayer}`;
+  // Bot (O) joga automaticamente
+  statusText.textContent = "Bot pensando...";
+  setTimeout(botMove, 500);
 }
 
-function checkWin() {
+function botMove() {
+  if (!gameActive) return;
+  // Escolhe uma posição aleatória vazia
+  const emptyIndices = gameState.map((v, i) => v === "" ? i : null).filter(i => i !== null);
+  if (emptyIndices.length === 0) return;
+  const choice = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+  gameState[choice] = "O";
+  updateBoard();
+
+  if (checkWin("O")) {
+    statusText.textContent = "Bot venceu! 🤖";
+    gameActive = false;
+    return;
+  }
+  if (isDraw()) {
+    statusText.textContent = "Empate 🤝";
+    gameActive = false;
+    return;
+  }
+
+  statusText.textContent = "Sua vez (X)";
+}
+
+function updateBoard() {
+  document.querySelectorAll(".cell").forEach((cell, i) => {
+    cell.textContent = gameState[i];
+    cell.className = "cell";
+    if (gameState[i]) cell.classList.add(gameState[i]);
+  });
+}
+
+function checkWin(player) {
   const winPatterns = [
     [0,1,2],[3,4,5],[6,7,8],
     [0,3,6],[1,4,7],[2,5,8],
@@ -52,31 +81,18 @@ function checkWin() {
   ];
   return winPatterns.some(pattern => {
     const [a,b,c] = pattern;
-    return gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c];
+    return gameState[a] === player && gameState[b] === player && gameState[c] === player;
   });
 }
 
-function highlightWin() {
-  const winPatterns = [
-    [0,1,2],[3,4,5],[6,7,8],
-    [0,3,6],[1,4,7],[2,5,8],
-    [0,4,8],[2,4,6]
-  ];
-  winPatterns.forEach(pattern => {
-    const [a,b,c] = pattern;
-    if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) {
-      document.querySelectorAll(".cell")[a].style.background = "#44ff44";
-      document.querySelectorAll(".cell")[b].style.background = "#44ff44";
-      document.querySelectorAll(".cell")[c].style.background = "#44ff44";
-    }
-  });
+function isDraw() {
+  return gameState.every(cell => cell !== "");
 }
 
 resetBtn.addEventListener("click", () => {
-  currentPlayer = "X";
-  gameActive = true;
   gameState = ["", "", "", "", "", "", "", "", ""];
-  statusText.textContent = "Vez do jogador X";
+  gameActive = true;
+  statusText.textContent = "Sua vez (X)";
   createBoard();
 });
 
