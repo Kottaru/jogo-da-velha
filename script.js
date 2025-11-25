@@ -13,6 +13,7 @@ function createBoard() {
     div.classList.add("cell");
     div.dataset.index = index;
     div.textContent = cell;
+    if (cell) div.classList.add(cell);
     div.addEventListener("click", handleCellClick);
     board.appendChild(div);
   });
@@ -24,9 +25,11 @@ function handleCellClick(e) {
 
   gameState[index] = currentPlayer;
   e.target.textContent = currentPlayer;
+  e.target.classList.add(currentPlayer);
 
   if (checkWin()) {
     statusText.textContent = `Jogador ${currentPlayer} venceu! 🎉`;
+    highlightWin();
     gameActive = false;
     return;
   }
@@ -43,13 +46,29 @@ function handleCellClick(e) {
 
 function checkWin() {
   const winPatterns = [
-    [0,1,2],[3,4,5],[6,7,8], // linhas
-    [0,3,6],[1,4,7],[2,5,8], // colunas
-    [0,4,8],[2,4,6]          // diagonais
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
   ];
   return winPatterns.some(pattern => {
     const [a,b,c] = pattern;
     return gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c];
+  });
+}
+
+function highlightWin() {
+  const winPatterns = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+  winPatterns.forEach(pattern => {
+    const [a,b,c] = pattern;
+    if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) {
+      document.querySelectorAll(".cell")[a].style.background = "#44ff44";
+      document.querySelectorAll(".cell")[b].style.background = "#44ff44";
+      document.querySelectorAll(".cell")[c].style.background = "#44ff44";
+    }
   });
 }
 
