@@ -1,123 +1,60 @@
-const board = document.getElementById("board");
-const statusText = document.getElementById("status");
+const cells = document.querySelectorAll(".cell");
+const statusEl = document.getElementById("status");
 const resetBtn = document.getElementById("reset");
 
-let gameState = ["", "", "", "", "", "", "", "", ""];
-let gameActive = true;
+let currentPlayer = "X";
+let gameOver = false;
 
-function createBoard() {
-  board.innerHTML = "";
-  gameState.forEach((cell, index) => {
-    const div = document.createElement("div");
-    div.classList.add("cell");
-    div.dataset.index = index;
-    div.textContent = cell;
-    if (cell) div.classList.add(cell);
-    div.addEventListener("click", handlePlayerClick);
-    board.appendChild(div);
-  });
-}
-
-function handlePlayerClick(e) {
-  const index = e.target.dataset.index;
-  if (!gameActive || gameState[index] !== "") return;
-
-  // Jogador (X)
-  gameState[index] = "X";
-  updateBoard();
-
-  if (checkWin("X")) {
-    statusText.textContent = "Você venceu! 🎉";
-    gameActive = false;
-    return;
-  }
-  if (isDraw()) {
-    statusText.textContent = "Empate 🤝";
-    gameActive = false;
-    return;
-  }
-
-  // Bot (O) joga automaticamente
-  statusText.textContent = "Bot pensando...";
-  setTimeout(botMove, 500);
-}
-
-function botMove() {
-  if (!gameActive) return;
-
-  // 1. Se o bot pode vencer, faz isso
-  let move = findBestMove("O");
-  // 2. Se o jogador pode vencer na próxima, bloqueia
-  if (move === null) move = findBestMove("X");
-  // 3. Senão, escolhe aleatório
-  if (move === null) {
-    const emptyIndices = gameState.map((v, i) => v === "" ? i : null).filter(i => i !== null);
-    move = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
-  }
-
-  gameState[move] = "O";
-  updateBoard();
-
-  if (checkWin("O")) {
-    statusText.textContent = "Bot venceu! 🤖";
-    gameActive = false;
-    return;
-  }
-  if (isDraw()) {
-    statusText.textContent = "Empate 🤝";
-    gameActive = false;
-    return;
-  }
-
-  statusText.textContent = "Sua vez (X)";
-}
-
-function findBestMove(player) {
-  const winPatterns = [
-    [0,1,2],[3,4,5],[6,7,8],
-    [0,3,6],[1,4,7],[2,5,8],
-    [0,4,8],[2,4,6]
+function checkWinner() {
+  const combos = [
+    [0,1,2],[3,4,5],[6,7,8], // linhas
+    [0,3,6],[1,4,7],[2,5,8], // colunas
+    [0,4,8],[2,4,6]          // diagonais
   ];
-  for (const pattern of winPatterns) {
-    const [a,b,c] = pattern;
-    const values = [gameState[a], gameState[b], gameState[c]];
-    // Se duas casas são do player e a terceira está vazia → jogada vencedora/bloqueio
-    if (values.filter(v => v === player).length === 2 && values.includes("")) {
-      return pattern[values.indexOf("")];
+
+  for (let combo of combos) {
+    const [a,b,c] = combo;
+    if (
+      cells[a].textContent &&
+      cells[a].textContent === cells[b].textContent &&
+      cells[a].textContent === cells[c].textContent
+    ) {
+      statusEl.textContent = `Jogador ${cells[a].textContent} venceu!`;
+      gameOver = true;
+      return;
     }
   }
-  return null;
+
+  // empate
+  if ([...cells].every(cell => cell.textContent !== "")) {
+    statusEl.textContent = "Empate!";
+    gameOver = true;
+  }
 }
 
-function updateBoard() {
-  document.querySelectorAll(".cell").forEach((cell, i) => {
-    cell.textContent = gameState[i];
-    cell.className = "cell";
-    if (gameState[i]) cell.classList.add(gameState[i]);
+cells.forEach(cell => {
+  cell.addEventListener("click", () => {
+    if (gameOver) return; // bloqueia se acabou
+    if (cell.textContent !== "") return; // bloqueia spam
+
+    cell.textContent = currentPlayer;
+    cell.classList.add("taken");
+
+    checkWinner();
+
+    if (!gameOver) {
+      currentPlayer = currentPlayer === "X" ? "O" : "X";
+      statusEl.textContent = `Vez do jogador ${currentPlayer}`;
+    }
   });
-}
-
-function checkWin(player) {
-  const winPatterns = [
-    [0,1,2],[3,4,5],[6,7,8],
-    [0,3,6],[1,4,7],[2,5,8],
-    [0,4,8],[2,4,6]
-  ];
-  return winPatterns.some(pattern => {
-    const [a,b,c] = pattern;
-    return gameState[a] === player && gameState[b] === player && gameState[c] === player;
-  });
-}
-
-function isDraw() {
-  return gameState.every(cell => cell !== "");
-}
-
-resetBtn.addEventListener("click", () => {
-  gameState = ["", "", "", "", "", "", "", "", ""];
-  gameActive = true;
-  statusText.textContent = "Sua vez (X)";
-  createBoard();
 });
 
-createBoard();
+resetBtn.addEventListener("click", () => {
+  cells.forEach(cell => {
+    cell.textContent = "";
+    cell.classList.remove("taken");
+  });
+  currentPlayer = "X";
+  gameOver = false;
+  statusEl.textContent = "Vez do jogador X";
+});
