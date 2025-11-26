@@ -46,73 +46,110 @@
 
     let currentPlayer = "X"; // humano
     let gameOver = false;
-    let playerTurn = true;   // controla se é a vez do jogador
+    let playerTurn = true;
 
-    function checkWinner() {
+    function checkWinner(board = cells) {
       const combos = [
-        [0,1,2],[3,4,5],[6,7,8], // linhas
-        [0,3,6],[1,4,7],[2,5,8], // colunas
-        [0,4,8],[2,4,6]          // diagonais
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
       ];
-
-      for (let combo of combos) {
-        const [a,b,c] = combo;
+      for (let [a,b,c] of combos) {
         if (
-          cells[a].textContent &&
-          cells[a].textContent === cells[b].textContent &&
-          cells[a].textContent === cells[c].textContent
+          board[a].textContent &&
+          board[a].textContent === board[b].textContent &&
+          board[a].textContent === board[c].textContent
         ) {
-          if (cells[a].textContent === "X") {
-            statusEl.textContent = "Você venceu!";
-          } else {
-            statusEl.textContent = "Bot venceu!";
-          }
-          gameOver = true;
-          return true;
+          return board[a].textContent;
         }
       }
-
-      if ([...cells].every(cell => cell.textContent !== "")) {
-        statusEl.textContent = "Empate!";
-        gameOver = true;
-        return true;
-      }
-
-      return false;
+      if ([...board].every(cell => cell.textContent !== "")) return "empate";
+      return null;
     }
 
     function botMove() {
       if (gameOver) return;
 
-      const emptyCells = [...cells].filter(c => c.textContent === "");
-      if (emptyCells.length === 0) return;
+      // chance de erro (20%)
+      const mistakeChance = 0.2;
+      let move;
+      if (Math.random() < mistakeChance) {
+        // jogada aleatória
+        const emptyCells = [...cells].filter(c => c.textContent === "");
+        move = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+      } else {
+        // jogada ótima (Minimax)
+        const best = minimax([...cells], "O");
+        move = cells[best.index];
+      }
 
-      const choice = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-      choice.textContent = "O";
-      choice.classList.add("taken");
+      move.textContent = "O";
+      move.classList.add("taken");
 
-      checkWinner();
-
-      if (!gameOver) {
+      const winner = checkWinner();
+      if (winner) {
+        endGame(winner);
+      } else {
         currentPlayer = "X";
-        playerTurn = true; // libera o jogador
+        playerTurn = true;
         statusEl.textContent = "Sua vez (X)";
       }
+    }
+
+    function minimax(board, player) {
+      const empty = board.map((c,i)=>c.textContent===""?i:null).filter(i=>i!==null);
+      const winner = checkWinner(board);
+      if (winner === "X") return {score:-10};
+      if (winner === "O") return {score:10};
+      if (winner === "empate") return {score:0};
+
+      const moves = [];
+      for (let i of empty) {
+        const move = {index:i};
+        board[i].textContent = player;
+        if (player === "O") {
+          const result = minimax(board,"X");
+          move.score = result.score;
+        } else {
+          const result = minimax(board,"O");
+          move.score = result.score;
+        }
+        board[i].textContent = "";
+        moves.push(move);
+      }
+
+      let bestMove;
+      if (player === "O") {
+        let bestScore = -Infinity;
+        for (let m of moves) if (m.score > bestScore) {bestScore=m.score; bestMove=m;}
+      } else {
+        let bestScore = Infinity;
+        for (let m of moves) if (m.score < bestScore) {bestScore=m.score; bestMove=m;}
+      }
+      return bestMove;
+    }
+
+    function endGame(winner) {
+      gameOver = true;
+      if (winner === "X") statusEl.textContent = "Você venceu!";
+      else if (winner === "O") statusEl.textContent = "Bot venceu!";
+      else statusEl.textContent = "Empate!";
     }
 
     cells.forEach(cell => {
       cell.addEventListener("click", () => {
         if (gameOver) return;
-        if (!playerTurn) return; // só deixa se for a vez do jogador
+        if (!playerTurn) return;
         if (cell.textContent !== "") return;
 
         cell.textContent = "X";
         cell.classList.add("taken");
 
-        const acabou = checkWinner();
-
-        if (!acabou) {
-          playerTurn = false; // trava o jogador
+        const winner = checkWinner();
+        if (winner) {
+          endGame(winner);
+        } else {
+          playerTurn = false;
           currentPlayer = "O";
           statusEl.textContent = "Bot pensando...";
           setTimeout(botMove, 500);
