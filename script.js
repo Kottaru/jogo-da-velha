@@ -19,22 +19,28 @@ function checkWinner() {
       cells[a].textContent === cells[b].textContent &&
       cells[a].textContent === cells[c].textContent
     ) {
-      statusEl.textContent = `Jogador ${cells[a].textContent} venceu!`;
+      if (cells[a].textContent === "X") {
+        statusEl.textContent = "Você venceu!";
+      } else {
+        statusEl.textContent = "Bot venceu!";
+      }
       gameOver = true;
-      return;
+      return true;
     }
   }
 
   if ([...cells].every(cell => cell.textContent !== "")) {
     statusEl.textContent = "Empate!";
     gameOver = true;
+    return true;
   }
+
+  return false;
 }
 
 function botMove() {
   if (gameOver) return;
 
-  // escolhe célula vazia aleatória
   const emptyCells = [...cells].filter(c => c.textContent === "");
   if (emptyCells.length === 0) return;
 
@@ -59,12 +65,12 @@ cells.forEach(cell => {
     cell.textContent = "X";
     cell.classList.add("taken");
 
-    checkWinner();
+    const acabou = checkWinner();
 
-    if (!gameOver) {
+    if (!acabou) {
       currentPlayer = "O";
       statusEl.textContent = "Bot pensando...";
-      setTimeout(botMove, 500); // bot joga após meio segundo
+      setTimeout(botMove, 500);
     }
   });
 });
