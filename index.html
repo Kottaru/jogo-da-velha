@@ -5,79 +5,82 @@
   <title>Jogo da Velha</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      text-align: center;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #f0f0f0;
-      margin: 0;
-      min-height: 100vh;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: #f9f9f9;
+      color: #333;
       display: flex;
       flex-direction: column;
+      align-items: center;
       justify-content: center;
+      min-height: 100vh;
+      margin: 0;
     }
     h1 {
-      margin-bottom: 10px;
-      font-size: 2.5em;
-      color: #ffcc00;
-      text-shadow: 2px 2px 4px #000;
+      margin-bottom: 20px;
+      font-size: 2em;
+      color: #222;
     }
     #board {
       display: grid;
-      grid-template-columns: repeat(3, 120px);
-      grid-template-rows: repeat(3, 120px);
-      gap: 10px;
-      justify-content: center;
-      margin: 20px auto;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 8px;
+      margin: 20px 0;
     }
     .cell {
-      background: #1c1f26;
-      border-radius: 12px;
-      font-size: 3em;
+      background: #fff;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      font-size: 2.5em;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      color: #00d9ff;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-      transition: transform 0.2s, background 0.3s;
+      transition: background 0.2s, border-color 0.2s;
     }
     .cell:hover {
-      transform: scale(1.05);
-      background: #2a2f3a;
+      background: #f0f0f0;
+      border-color: #999;
     }
-    .cell.taken { cursor: not-allowed; opacity: 0.8; }
+    .cell.taken { cursor: not-allowed; }
     #status {
-      margin-top: 15px;
-      font-size: 1.3em;
-      font-weight: bold;
+      margin: 10px 0;
+      font-size: 1.2em;
+      font-weight: 500;
     }
     button {
-      margin: 10px 5px;
-      padding: 10px 20px;
+      margin: 5px;
+      padding: 8px 16px;
       font-size: 1em;
       cursor: pointer;
       border: none;
-      border-radius: 8px;
-      background: #ffcc00;
-      color: #222;
-      font-weight: bold;
-      transition: background 0.3s, transform 0.2s;
+      border-radius: 6px;
+      background: #0078d7;
+      color: #fff;
+      transition: background 0.3s;
     }
     button:hover {
-      background: #ffaa00;
-      transform: scale(1.05);
+      background: #005fa3;
     }
     .difficulty {
-      margin-top: 20px;
+      margin-top: 15px;
     }
     .difficulty p {
       margin-bottom: 8px;
-      font-size: 1.1em;
+      font-size: 1em;
+      color: #555;
+    }
+    .difficulty button {
+      background: #e0e0e0;
+      color: #333;
+    }
+    .difficulty button:hover {
+      background: #ccc;
     }
   </style>
 </head>
 <body>
-  <h1>✨ Jogo da Velha ✨</h1>
+  <h1>Jogo da Velha</h1>
   <div id="board">
     <div class="cell"></div><div class="cell"></div><div class="cell"></div>
     <div class="cell"></div><div class="cell"></div><div class="cell"></div>
@@ -98,7 +101,7 @@
     const statusEl = document.getElementById("status");
     const resetBtn = document.getElementById("reset");
 
-    let currentPlayer = "X"; // humano
+    let currentPlayer = "X"; 
     let gameOver = false;
     let playerTurn = true;
     let mistakeChance = 0.2; // padrão (médio)
@@ -134,11 +137,9 @@
 
       let move;
       if (Math.random() < mistakeChance) {
-        // jogada aleatória
         const emptyCells = [...cells].filter(c => c.textContent === "");
         move = emptyCells[Math.floor(Math.random() * emptyCells.length)];
       } else {
-        // jogada ótima (Minimax)
         const best = minimax([...cells], "O");
         move = cells[best.index];
       }
@@ -191,9 +192,9 @@
 
     function endGame(winner) {
       gameOver = true;
-      if (winner === "X") statusEl.textContent = "🎉 Você venceu!";
-      else if (winner === "O") statusEl.textContent = "🤖 Bot venceu!";
-      else statusEl.textContent = "😐 Empate!";
+      if (winner === "X") statusEl.textContent = "Você venceu!";
+      else if (winner === "O") statusEl.textContent = "Bot venceu!";
+      else statusEl.textContent = "Empate!";
     }
 
     cells.forEach(cell => {
