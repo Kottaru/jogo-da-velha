@@ -2,7 +2,7 @@ const cells = document.querySelectorAll(".cell");
 const statusEl = document.getElementById("status");
 const resetBtn = document.getElementById("reset");
 
-let currentPlayer = "X";
+let currentPlayer = "X"; // humano
 let gameOver = false;
 
 function checkWinner() {
@@ -25,26 +25,46 @@ function checkWinner() {
     }
   }
 
-  // empate
   if ([...cells].every(cell => cell.textContent !== "")) {
     statusEl.textContent = "Empate!";
     gameOver = true;
   }
 }
 
+function botMove() {
+  if (gameOver) return;
+
+  // escolhe célula vazia aleatória
+  const emptyCells = [...cells].filter(c => c.textContent === "");
+  if (emptyCells.length === 0) return;
+
+  const choice = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+  choice.textContent = "O";
+  choice.classList.add("taken");
+
+  checkWinner();
+
+  if (!gameOver) {
+    currentPlayer = "X";
+    statusEl.textContent = "Sua vez (X)";
+  }
+}
+
 cells.forEach(cell => {
   cell.addEventListener("click", () => {
-    if (gameOver) return; // bloqueia se acabou
-    if (cell.textContent !== "") return; // bloqueia spam
+    if (gameOver) return;
+    if (cell.textContent !== "") return;
+    if (currentPlayer !== "X") return; // só humano joga X
 
-    cell.textContent = currentPlayer;
+    cell.textContent = "X";
     cell.classList.add("taken");
 
     checkWinner();
 
     if (!gameOver) {
-      currentPlayer = currentPlayer === "X" ? "O" : "X";
-      statusEl.textContent = `Vez do jogador ${currentPlayer}`;
+      currentPlayer = "O";
+      statusEl.textContent = "Bot pensando...";
+      setTimeout(botMove, 500); // bot joga após meio segundo
     }
   });
 });
@@ -56,5 +76,5 @@ resetBtn.addEventListener("click", () => {
   });
   currentPlayer = "X";
   gameOver = false;
-  statusEl.textContent = "Vez do jogador X";
+  statusEl.textContent = "Sua vez (X)";
 });
