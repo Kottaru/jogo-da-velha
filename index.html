@@ -26,7 +26,8 @@
     }
     .cell.taken { cursor: not-allowed; }
     #status { margin-top: 20px; font-size: 1.2em; }
-    button { margin-top: 15px; padding: 10px 20px; font-size: 1em; cursor: pointer; }
+    button { margin: 10px 5px; padding: 10px 20px; font-size: 1em; cursor: pointer; }
+    .difficulty { margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -39,6 +40,13 @@
   <div id="status">Sua vez (X)</div>
   <button id="reset">Reiniciar</button>
 
+  <div class="difficulty">
+    <p>Escolha a dificuldade:</p>
+    <button onclick="setDifficulty('facil')">Fácil</button>
+    <button onclick="setDifficulty('medio')">Médio</button>
+    <button onclick="setDifficulty('dificil')">Difícil</button>
+  </div>
+
   <script>
     const cells = document.querySelectorAll(".cell");
     const statusEl = document.getElementById("status");
@@ -47,6 +55,14 @@
     let currentPlayer = "X"; // humano
     let gameOver = false;
     let playerTurn = true;
+    let mistakeChance = 0.2; // padrão (médio)
+
+    function setDifficulty(level) {
+      if (level === "facil") mistakeChance = 0.4;
+      if (level === "medio") mistakeChance = 0.2;
+      if (level === "dificil") mistakeChance = 0.05;
+      statusEl.textContent = `Dificuldade: ${level.toUpperCase()} — Sua vez (X)`;
+    }
 
     function checkWinner(board = cells) {
       const combos = [
@@ -70,8 +86,6 @@
     function botMove() {
       if (gameOver) return;
 
-      // chance de erro (20%)
-      const mistakeChance = 0.2;
       let move;
       if (Math.random() < mistakeChance) {
         // jogada aleatória
