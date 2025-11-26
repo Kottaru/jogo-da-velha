@@ -1,21 +1,156 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jogo da Velha com Bot</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Jogo da Velha</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; background: #111; color: #eee; }
+    h1 { margin-top: 20px; }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 5px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+    .cell {
+      background: #222;
+      border: 2px solid #555;
+      font-size: 2.5em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #2f81f7;
+    }
+    .cell.taken { cursor: not-allowed; }
+    #status { margin-top: 20px; font-size: 1.2em; }
+    button { margin-top: 15px; padding: 10px 20px; font-size: 1em; cursor: pointer; }
+  </style>
 </head>
 <body>
   <h1>Jogo da Velha</h1>
-  <div id="board">
-    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
-    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
-    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
-  </div>
-  <p id="status">Sua vez (X)</p>
-  <button id="reset">Reiniciar</button>
+  <div id="board"></div>
+  <div id="status">Sua vez!</div>
+  <button onclick="resetGame()">Reiniciar</button>
 
-  <script src="script.js"></script>
+  <script>
+    const boardEl = document.getElementById("board");
+    const statusEl = document.getElementById("status");
+    let board = Array(9).fill(null);
+    let gameOver = false;
+
+    // Renderiza o tabuleiro
+    function renderBoard() {
+      boardEl.innerHTML = "";
+      board.forEach((cell, i) => {
+        const div = document.createElement("div");
+        div.className = "cell" + (cell ? " taken" : "");
+        div.textContent = cell ? cell : "";
+        div.addEventListener("click", () => playerMove(i));
+        boardEl.appendChild(div);
+      });
+    }
+
+    // Jogada do jogador
+    function playerMove(i) {
+      if (gameOver || board[i]) return;
+      board[i] = "X";
+      renderBoard();
+      if (checkWinner(board, "X")) {
+        statusEl.textContent = "Você venceu!";
+        gameOver = true;
+        return;
+      }
+      if (isFull(board)) {
+        statusEl.textContent = "Empate!";
+        gameOver = true;
+        return;
+      }
+      statusEl.textContent = "Vez do bot...";
+      setTimeout(botMove, 500);
+    }
+
+    // Jogada do bot (Minimax)
+    function botMove() {
+      const best = minimax(board, "O");
+      board[best.index] = "O";
+      renderBoard();
+      if (checkWinner(board, "O")) {
+        statusEl.textContent = "O bot venceu!";
+        gameOver = true;
+        return;
+      }
+      if (isFull(board)) {
+        statusEl.textContent = "Empate!";
+        gameOver = true;
+        return;
+      }
+      statusEl.textContent = "Sua vez!";
+    }
+
+    // Função Minimax
+    function minimax(newBoard, player) {
+      const availSpots = newBoard.map((v,i)=>v?null:i).filter(v=>v!==null);
+
+      if (checkWinner(newBoard, "X")) return { score: -10 };
+      if (checkWinner(newBoard, "O")) return { score: 10 };
+      if (availSpots.length === 0) return { score: 0 };
+
+      const moves = [];
+      for (let i of availSpots) {
+        const move = {};
+        move.index = i;
+        newBoard[i] = player;
+
+        if (player === "O") {
+          const result = minimax(newBoard, "X");
+          move.score = result.score;
+        } else {
+          const result = minimax(newBoard, "O");
+          move.score = result.score;
+        }
+
+        newBoard[i] = null;
+        moves.push(move);
+      }
+
+      let bestMove;
+      if (player === "O") {
+        let bestScore = -Infinity;
+        for (let m of moves) {
+          if (m.score > bestScore) { bestScore = m.score; bestMove = m; }
+        }
+      } else {
+        let bestScore = Infinity;
+        for (let m of moves) {
+          if (m.score < bestScore) { bestScore = m.score; bestMove = m; }
+        }
+      }
+      return bestMove;
+    }
+
+    // Checa vencedor
+    function checkWinner(b, player) {
+      const wins = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      return wins.some(line => line.every(i => b[i] === player));
+    }
+
+    function isFull(b) { return b.every(c => c); }
+
+    function resetGame() {
+      board = Array(9).fill(null);
+      gameOver = false;
+      statusEl.textContent = "Sua vez!";
+      renderBoard();
+    }
+
+    renderBoard();
+  </script>
 </body>
 </html>
